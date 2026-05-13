@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Env } from "../types";
-import { ensureUser, listFiles, listTasks, recentConversation, saveConversation, updateUser, deleteFileRows } from "../services/db";
+import { ensureUser, listFiles, listTasks, recentConversation, saveConversation, updateUser, deleteFileRows, listFileChunkIds } from "../services/db";
 import { LlmClient } from "../services/llm";
 import { ingestFile, rememberTurn, retrieveContexts } from "../services/files";
 import { VectorStore } from "../services/qdrant";
@@ -49,10 +49,12 @@ api.post("/files", async (c) => {
 
 api.delete("/files/:id", async (c) => {
   const user = await ensureUser(c.env.DB, getSessionId(c.req.raw));
-  const file = await deleteFileRows(c.env.DB, user.id, c.req.param("id"));
+  const fileId = c.req.param("id");
+  const chunkIds = await listFileChunkIds(c.env.DB, user.id, fileId);
+  const file = await deleteFileRows(c.env.DB, user.id, fileId);
   if (!file) return c.json({ error: "File not found" }, 404);
   if (file.storage_key && c.env.FILE_BUCKET) await c.env.FILE_BUCKET.delete(file.storage_key);
-  await new VectorStore(c.env).deleteByFile(file.id);
+  await new VectorStore(c.env).deleteByFile(file.id, chunkIds);
   return c.json({ ok: true });
 });
 

@@ -52,15 +52,9 @@ export class VectorStore {
     });
   }
 
-  async deleteByFile(fileId: string) {
+  async deleteByFile(fileId: string, ids?: string[]) {
     if (this.env.VECTORIZE) {
-      const matches = await this.env.VECTORIZE.query(new Array(768).fill(0), {
-        topK: 100,
-        returnMetadata: true,
-        filter: { file_id: fileId }
-      });
-      const ids = matches.matches.map((match) => match.id);
-      if (ids.length) await this.env.VECTORIZE.deleteByIds(ids);
+      if (ids?.length) await this.env.VECTORIZE.deleteByIds(ids);
       return;
     }
     if (!this.enabled) return;

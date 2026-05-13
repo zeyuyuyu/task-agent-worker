@@ -61,3 +61,8 @@ export async function deleteFileRows(db: D1Database, userId: string, fileId: str
   await db.prepare("DELETE FROM files WHERE id = ? AND user_id = ?").bind(fileId, userId).run();
   return file;
 }
+
+export async function listFileChunkIds(db: D1Database, userId: string, fileId: string): Promise<string[]> {
+  const rows = (await db.prepare("SELECT id FROM chunks WHERE file_id = ? AND user_id = ?").bind(fileId, userId).all<{ id: string }>()).results;
+  return rows.map((row) => row.id);
+}
