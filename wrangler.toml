@@ -1,0 +1,27 @@
+name = "task-agent-worker"
+main = "src/index.ts"
+compatibility_date = "2026-05-13"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+preview_urls = true
+
+[vars]
+APP_NAME = "Mira Task Agent"
+OPENAI_MODEL = "gpt-4o-mini"
+OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
+GEMINI_MODEL = "gemini-2.0-flash-lite"
+QDRANT_COLLECTION = "task_agent_chunks"
+
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "task-agent-chunks"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "task_agent_db"
+database_id = "f16f63a6-f302-426e-bf43-bc94b9e5379d"
+
+# Optional: uncomment after creating an R2 bucket to retain original uploads.
+# [[r2_buckets]]
+# binding = "FILE_BUCKET"
+# bucket_name = "task-agent-files"

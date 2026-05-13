@@ -1,0 +1,24 @@
+{
+  "name": "task-agent-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local --persist-to=.wrangler/state",
+    "deploy": "wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply task_agent_db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply task_agent_db --remote",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2",
+    "hono": "^4.6.18"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260507.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4",
+    "wrangler": "^4.90.1"
+  }
+}
