@@ -15,7 +15,7 @@ Mira Task Agent 是一个部署在 Cloudflare Worker 上的智能对话式任务
 - 用户管理：自动识别姓名、邮箱和 AI 昵称，持久化到 D1。
 - 任务管理：用户用自然语言增删改查任务和任务需求，无传统表单。
 - 外部搜索：通过 Serper.dev 搜索 API 获取实时信息。
-- 深度研究：研究协调代理先拆解搜索子问题，再汇总结构化报告。
+- 深度研究：研究协调代理先拆解搜索子问题，再用 Tree of Thoughts 生成候选推理路径、评分并汇总结构化报告。
 - RAG 文件系统：上传 TXT、Markdown、DOCX、PDF 和图片；自动解析、分块、向量化；后续对话语义召回。
 - 数据持久化：D1 保存用户、任务、需求、对话、文件和本地向量；Cloudflare Vectorize 保存文档片段与长期记忆向量，Qdrant Cloud 保留为可替换方案。
 - 多模态加分：图片上传后可通过 OpenAI 或 Gemini 提取文字和视觉信息并纳入 RAG。
@@ -29,6 +29,7 @@ flowchart LR
   Agent --> LLM["LLM Adapter: OpenAI / Gemini / local fallback"]
   Agent --> Tasks["Task Tool"]
   Agent --> Search["Search Tool: Serper"]
+  Agent --> ToT["Tree of Thoughts Evaluator"]
   Agent --> Files["File Parser + Chunker"]
   Agent --> Rag["RAG Retriever"]
   Tasks --> D1["Cloudflare D1"]
@@ -43,7 +44,7 @@ flowchart LR
 
 - `src/routes/api.ts`：HTTP API、流式聊天、文件接口。
 - `src/agent/tasks.ts`：自然语言任务意图识别和任务工具执行。
-- `src/agent/research.ts`：子代理规划、多轮搜索和报告整合。
+- `src/agent/research.ts`：子代理规划、多轮搜索、Tree of Thoughts 评分和报告整合。
 - `src/services/llm.ts`：LLM 抽象层，当前支持 OpenAI、Gemini 2.0 Flash Lite 和本地降级。
 - `src/services/files.ts`：文件解析、分块、embedding、RAG 写入。
 - `src/services/qdrant.ts`：向量库适配层。优先使用 Cloudflare Vectorize，其次可切换 Qdrant，最后降级为 D1 本地向量相似度检索。
@@ -55,9 +56,10 @@ flowchart LR
 
 1. 规划代理把主题拆成 3-5 个可搜索子问题。
 2. 搜索代理分别调用 Serper.dev 获取实时结果。
-3. 汇总代理基于证据生成中文结构化报告，包含结论摘要、关键发现、不确定性、下一步建议和引用链接。
+3. Tree of Thoughts 推理器生成 3 条候选路径，每条包含假设、证据需求、风险、评分和评分理由。
+4. 汇总代理基于搜索证据和最佳思路生成中文结构化报告，包含结论摘要、最佳思路、关键发现、不确定性、下一步建议和引用链接。
 
-这个实现刻意保持简单透明，便于后续升级为更复杂的 Tree of Thoughts 或 Graph of Thoughts。
+前端右侧“TOT 研究演示”按钮会触发该流程，聊天回复中展示候选路径评分和最佳路径。
 
 ## RAG 与记忆召回流程
 

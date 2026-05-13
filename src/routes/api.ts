@@ -79,7 +79,10 @@ api.post("/chat", async (c) => {
 
   if (isResearchRequest(message)) {
     const research = await runResearch(c.env, message);
-    toolNote += `\n研究子代理计划：${research.plan.join(" | ")}\n${research.report}`;
+    const thoughtSummary = research.thoughts
+      .map((thought, index) => `${index + 1}. ${thought.title}：${thought.score}/10，${thought.rationale}`)
+      .join("\n");
+    toolNote += `\n研究子代理计划：${research.plan.join(" | ")}\nTree of Thoughts：\n${thoughtSummary}\n最佳路径：${research.winningThought?.title ?? "无"}\n${research.report}`;
   }
 
   const [tasks, files, contexts, history] = await Promise.all([
